@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Prose Overrides for Breaking B.A.D. */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--color-bad-green);
+  --tw-prose-lead: var(--foreground);
+  --tw-prose-links: var(--color-bad-blue);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--color-bad-green);
+  --tw-prose-bullets: var(--color-bad-green);
+  --tw-prose-hr: rgba(255, 255, 255, 0.1);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--color-bad-green);
+  --tw-prose-captions: var(--foreground);
+  --tw-prose-code: var(--color-bad-yellow);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: rgba(0, 0, 0, 0.3);
+  --tw-prose-th-borders: rgba(255, 255, 255, 0.2);
+  --tw-prose-td-borders: rgba(255, 255, 255, 0.1);
+}
+
+.prose p {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+.prose strong {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+@theme {
+  --color-bad-green: #4da163;
+  --color-bad-blue: #00d4ff;
+  --color-bad-yellow: #f1c40f;
+  --color-bad-black: #060806;
+
+  --background: var(--color-bad-black);
+  --foreground: #ffffff;
+
+  --font-sans: "Inter", sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+:root {
+  --background: #060806;
+  --foreground: #ffffff;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-green {
+  background: rgba(77, 161, 99, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(77, 161, 99, 0.2);
+}
+
+.glass-blue {
+  background: rgba(0, 212, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* Animations */
+@keyframes bubble {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.bubble {
+  position: absolute;
+  background: var(--color-bad-green);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: bubble linear infinite;
+}
+
+.text-glow-blue {
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5), 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.text-glow-green {
+  text-shadow: 0 0 10px rgba(77, 161, 99, 0.5), 0 0 20px rgba(77, 161, 99, 0.3);
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: currentColor;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 0.8s infinite;
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bad-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(77, 161, 99, 0.2);
+  border-radius: 10px;
+  border: 1px solid rgba(77, 161, 99, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(77, 161, 99, 0.4);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(77, 161, 99, 0.3) var(--color-bad-black);
+}
