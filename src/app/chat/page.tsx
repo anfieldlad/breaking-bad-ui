@@ -98,6 +98,11 @@ export default function ChatPage() {
                 throw new Error('Backend failed to wake up. Someone must have called the DEA.');
             }
 
+            const history = messages.map(msg => ({
+                role: msg.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: msg.content }]
+            }));
+
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
             const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
             const response = await fetch(`${apiUrl}/api/chat`, {
@@ -106,7 +111,10 @@ export default function ChatPage() {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify({ question: input })
+                body: JSON.stringify({
+                    question: input,
+                    history: history
+                })
             });
 
             if (!response.body) throw new Error('No body');
