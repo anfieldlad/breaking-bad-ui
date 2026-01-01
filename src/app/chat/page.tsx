@@ -93,9 +93,14 @@ export default function ChatPage() {
         setBufferedSources([]);
 
         try {
-            const response = await fetch('/api/chat', {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+            const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
+            const response = await fetch(`${apiUrl}/api/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                },
                 body: JSON.stringify({ question: input })
             });
 

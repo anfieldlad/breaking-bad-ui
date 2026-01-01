@@ -28,8 +28,13 @@ export default function IngestPage() {
         try {
             // Note: Base URL is handled by the browser if it's the same domain, 
             // otherwise it should be configured. Using relative path for proxy/local.
-            const response = await fetch('/api/ingest', {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+            const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
+            const response = await fetch(`${apiUrl}/api/ingest`, {
                 method: 'POST',
+                headers: {
+                    'X-API-Key': apiKey
+                },
                 body: formData,
             });
 

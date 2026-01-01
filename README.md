@@ -28,6 +28,7 @@ Create a `.env.local` file:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_KEY=your_secret_api_key
 ```
 
 > For production, point to your deployed backend URL.
@@ -71,12 +72,19 @@ This UI connects to the [Breaking B.A.D. Backend](https://github.com/anfieldlad/
 // Ingest PDF
 const formData = new FormData();
 formData.append('file', file);
-await fetch(`${API_URL}/api/ingest`, { method: 'POST', body: formData });
+await fetch(`${API_URL}/api/ingest`, { 
+  method: 'POST', 
+  headers: { 'X-API-Key': API_KEY },
+  body: formData 
+});
 
 // Stream Chat
 const response = await fetch(`${API_URL}/api/chat`, {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 
+    'Content-Type': 'application/json',
+    'X-API-Key': API_KEY
+  },
   body: JSON.stringify({ question: "Your question here" })
 });
 // Handle SSE stream...
