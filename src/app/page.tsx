@@ -21,7 +21,7 @@ export default function Home() {
         </div>
 
         <p className="max-w-2xl text-xl text-foreground/60 mb-2">
-          "Breaking down files. Building up answers."
+          &quot;Breaking down files. Building up answers.&quot;
         </p>
         <p className="max-w-2xl text-xs text-bad-green/40 mb-12 uppercase tracking-widest font-bold">
           Bot Answering Dialogue • RAG Chatbot APP
@@ -46,7 +46,7 @@ export default function Home() {
         </Card>
         <Card title="Blue Crystal SSE" variant="blue">
           <p className="text-foreground/70">
-            Real-time streaming responses with 99% purity. Watch the reasoning "cook" before your eyes.
+            Real-time streaming responses with 99% purity. Watch the reasoning &quot;cook&quot; before your eyes.
           </p>
         </Card>
         <Card title="The Empire Business" variant="default">

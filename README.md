@@ -59,6 +59,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### 💎 The Product (Chat Page)
 - **"Cooking the data..."** — Live reasoning stream with glassmorphic UI
 - **"The pure product."** — Crystal-blue final answers
+- **Backend Warm-up** — Automatic health check handles Render free tier "cold starts" with themed notifications
 - Typewriter effect for immersive responses
 - Markdown rendering with syntax highlighting
 

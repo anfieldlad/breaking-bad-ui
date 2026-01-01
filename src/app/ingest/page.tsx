@@ -3,10 +3,12 @@
 import React, { useState, useRef } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ensureBackendAvailable } from '@/lib/api';
 
 export default function IngestPage() {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isWakingUp, setIsWakingUp] = useState(false);
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,8 +28,11 @@ export default function IngestPage() {
         formData.append('file', file);
 
         try {
-            // Note: Base URL is handled by the browser if it's the same domain, 
-            // otherwise it should be configured. Using relative path for proxy/local.
+            const isAvailable = await ensureBackendAvailable(setIsWakingUp);
+            if (!isAvailable) {
+                throw new Error('Backend failed to wake up.');
+            }
+
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
             const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
             const response = await fetch(`${apiUrl}/api/ingest`, {
@@ -47,6 +52,7 @@ export default function IngestPage() {
             });
             setFile(null);
         } catch (err) {
+            console.error("Upload error:", err);
             setMessage({ text: 'The batch was compromised. Try again.', type: 'error' });
         } finally {
             setIsUploading(false);
@@ -126,6 +132,19 @@ export default function IngestPage() {
                     <p className="font-bold flex items-center">
                         {message.type === 'success' ? '✅' : '❌'} {message.text}
                     </p>
+                </div>
+            )}
+
+            {isWakingUp && (
+                <div className="mt-8 p-4 rounded-xl glass border-bad-green/30 animate-pulse flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                        <span className="text-xl">⚗️</span>
+                        <div>
+                            <p className="font-bold text-bad-green uppercase tracking-wider">Heating the laboratory...</p>
+                            <p className="text-xs text-foreground/40 italic">Waiting for Render free tier backend to spin up</p>
+                        </div>
+                    </div>
+                    <div className="w-8 h-8 rounded-full border-2 border-bad-green/20 border-t-bad-green animate-spin" />
                 </div>
             )}
         </div>

@@ -1,16 +1,15 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { ensureBackendAvailable } from '@/lib/api';
 
 interface Message {
     role: 'user' | 'assistant';
     content: string;
     thought?: string;
-    sources?: any[];
+    sources?: unknown[];
 }
 
 export default function ChatPage() {
@@ -22,7 +21,8 @@ export default function ChatPage() {
     const [displayThread, setDisplayThread] = useState<string>('');
     const [displayThought, setDisplayThought] = useState<string>('');
     const [isStreamFinished, setIsStreamFinished] = useState(false);
-    const [bufferedSources, setBufferedSources] = useState<any[]>([]);
+    const [bufferedSources, setBufferedSources] = useState<unknown[]>([]);
+    const [isWakingUp, setIsWakingUp] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -93,6 +93,11 @@ export default function ChatPage() {
         setBufferedSources([]);
 
         try {
+            const isAvailable = await ensureBackendAvailable(setIsWakingUp);
+            if (!isAvailable) {
+                throw new Error('Backend failed to wake up. Someone must have called the DEA.');
+            }
+
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
             const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
             const response = await fetch(`${apiUrl}/api/chat`, {
@@ -110,7 +115,6 @@ export default function ChatPage() {
             const decoder = new TextDecoder();
             let fullAnswer = '';
             let fullThought = '';
-            let sources = [];
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -155,7 +159,7 @@ export default function ChatPage() {
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-4xl font-black tracking-tight">BREAKING <span className="text-bad-green italic">B.A.D.</span></h1>
-                    <p className="text-foreground/50 italic">"Breaking down files. Building up answers."</p>
+                    <p className="text-foreground/50 italic">&quot;Breaking down files. Building up answers.&quot;</p>
                 </div>
                 <div className="hidden md:block">
                     <div className="glass-blue px-4 py-2 rounded-xl flex items-center space-x-3">
@@ -253,6 +257,22 @@ export default function ChatPage() {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Wake-up Notification */}
+                {isWakingUp && (
+                    <div className="flex justify-center my-4">
+                        <div className="glass-green px-6 py-3 rounded-2xl border-2 border-bad-green/30 animate-pulse flex items-center space-x-3">
+                            <div className="relative">
+                                <span className="text-xl">⚗️</span>
+                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-bad-green rounded-full animate-ping" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-bad-green uppercase tracking-widest">Waking up the chemist...</p>
+                                <p className="text-[10px] text-foreground/40 italic">Render free tier: Cold-start in progress</p>
+                            </div>
                         </div>
                     </div>
                 )}
