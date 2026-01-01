@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Breaking B.A.D. UI 🧪
 
-## Getting Started
+**Bot Answering Dialogue** — *"Breaking down files. Building up answers."*
 
-First, run the development server:
+The frontend interface for the Breaking B.A.D. RAG chatbot — a sleek, Breaking Bad-themed UI for document ingestion and AI-powered Q&A.
+
+## Tech Stack
+
+- **Framework:** Next.js 16
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 4
+- **Markdown:** react-markdown + remark-gfm
+- **Runtime:** React 19
+
+## Quick Start
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/anfieldlad/breaking-bad-ui.git
+cd breaking-bad-ui
+npm install
+```
+
+### 2. Configure Environment
+
+Create a `.env.local` file:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+> For production, point to your deployed backend URL.
+
+### 3. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/ingest` | Upload & process PDF documents |
+| `/chat` | AI chat interface with streaming responses |
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
+### 🧪 The Lab (Ingest Page)
+- Drag-and-drop PDF upload
+- Real-time processing feedback
+- Document management
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 💎 The Product (Chat Page)
+- **"Cooking the data..."** — Live reasoning stream with glassmorphic UI
+- **"The pure product."** — Crystal-blue final answers
+- Typewriter effect for immersive responses
+- Markdown rendering with syntax highlighting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Backend
 
-## Deploy on Vercel
+This UI connects to the [Breaking B.A.D. Backend](https://github.com/anfieldlad/breaking-bad-backend) — a FastAPI service with MongoDB Atlas vector storage and Google Gemini AI.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### API Integration
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```javascript
+// Ingest PDF
+const formData = new FormData();
+formData.append('file', file);
+await fetch(`${API_URL}/api/ingest`, { method: 'POST', body: formData });
+
+// Stream Chat
+const response = await fetch(`${API_URL}/api/chat`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ question: "Your question here" })
+});
+// Handle SSE stream...
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+
+## License
+
+MIT
