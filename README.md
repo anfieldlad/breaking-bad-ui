@@ -51,10 +51,17 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Features
 
+### 📱 Responsive Design
+- **Mobile-first approach** — Fully optimized for all screen sizes
+- **Adaptive navigation** — Hamburger menu with smooth animations on mobile
+- **Responsive typography** — Scalable fonts that adjust to viewport
+- **Touch-friendly UI** — Larger tap targets and optimized spacing for mobile
+
 ### 🧪 The Lab (Ingest Page)
 - Drag-and-drop PDF upload
 - Real-time processing feedback
 - Document management
+- Mobile-optimized upload area
 
 ### 💎 The Product (Chat Page)
 - **"Cooking the data..."** — Live reasoning stream with glassmorphic UI
@@ -62,6 +69,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Backend Warm-up** — Automatic health check handles Render free tier "cold starts" with themed notifications
 - Typewriter effect for immersive responses
 - Markdown rendering with syntax highlighting
+- Responsive message bubbles optimized for mobile
 
 ## Backend
 
