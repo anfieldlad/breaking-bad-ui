@@ -60,15 +60,15 @@ export default function IngestPage() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto px-6 py-12">
-            <div className="mb-12">
-                <h1 className="text-4xl font-black mb-2 tracking-tight">INGESTION <span className="text-bad-green">FACILITY</span></h1>
-                <p className="text-foreground/50 italic">Securely cook your data into the system.</p>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+            <div className="mb-8 sm:mb-12">
+                <h1 className="text-2xl sm:text-4xl font-black mb-2 tracking-tight">INGESTION <span className="text-bad-green">FACILITY</span></h1>
+                <p className="text-foreground/50 italic text-sm sm:text-base">Securely cook your data into the system.</p>
             </div>
 
-            <Card variant="green" className="mb-8">
+            <Card variant="green" className="mb-6 sm:mb-8">
                 <div
-                    className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ${file ? 'border-bad-green bg-bad-green/5' : 'border-white/10 hover:border-bad-green/50'
+                    className={`border-2 border-dashed rounded-xl p-6 sm:p-12 text-center transition-all duration-300 cursor-pointer ${file ? 'border-bad-green bg-bad-green/5' : 'border-white/10 hover:border-bad-green/50'
                         }`}
                     onClick={() => fileInputRef.current?.click()}
                     onDragOver={(e) => e.preventDefault()}
@@ -88,21 +88,21 @@ export default function IngestPage() {
                     />
 
                     <div className="flex flex-col items-center">
-                        <div className="w-16 h-16 bg-bad-green/20 rounded-full flex items-center justify-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-bad-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-bad-green/20 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-bad-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
                         </div>
 
                         {file ? (
-                            <div>
-                                <p className="text-xl font-bold text-bad-green mb-1">{file.name}</p>
-                                <p className="text-sm text-foreground/50">{(file.size / 1024 / 1024).toFixed(2)} MB - Ready to cook</p>
+                            <div className="px-2">
+                                <p className="text-base sm:text-xl font-bold text-bad-green mb-1 break-all">{file.name}</p>
+                                <p className="text-xs sm:text-sm text-foreground/50">{(file.size / 1024 / 1024).toFixed(2)} MB - Ready to cook</p>
                             </div>
                         ) : (
-                            <div>
-                                <p className="text-xl font-medium mb-1">Drop the chemical cargo here</p>
-                                <p className="text-sm text-foreground/50 italic">Accepts .PDF format for high purity results</p>
+                            <div className="px-2">
+                                <p className="text-base sm:text-xl font-medium mb-1">Drop the chemical cargo here</p>
+                                <p className="text-xs sm:text-sm text-foreground/50 italic">Accepts .PDF format for high purity results</p>
                             </div>
                         )}
                     </div>
@@ -136,15 +136,15 @@ export default function IngestPage() {
             )}
 
             {isWakingUp && (
-                <div className="mt-8 p-4 rounded-xl glass border-bad-green/30 animate-pulse flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                        <span className="text-xl">⚗️</span>
+                <div className="mt-6 sm:mt-8 p-3 sm:p-4 rounded-xl glass border-bad-green/30 animate-pulse flex items-center justify-between gap-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                        <span className="text-lg sm:text-xl">⚗️</span>
                         <div>
-                            <p className="font-bold text-bad-green uppercase tracking-wider">Heating the laboratory...</p>
-                            <p className="text-xs text-foreground/40 italic">Waiting for Render free tier backend to spin up</p>
+                            <p className="font-bold text-bad-green uppercase tracking-wider text-sm sm:text-base">Heating the laboratory...</p>
+                            <p className="text-[10px] sm:text-xs text-foreground/40 italic">Waiting for backend to spin up</p>
                         </div>
                     </div>
-                    <div className="w-8 h-8 rounded-full border-2 border-bad-green/20 border-t-bad-green animate-spin" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-bad-green/20 border-t-bad-green animate-spin flex-shrink-0" />
                 </div>
             )}
         </div>
