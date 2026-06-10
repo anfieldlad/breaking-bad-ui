@@ -23,6 +23,9 @@ export default function ChatPage() {
     const [isStreamFinished, setIsStreamFinished] = useState(false);
     const [bufferedSources, setBufferedSources] = useState<unknown[]>([]);
     const [isWakingUp, setIsWakingUp] = useState(false);
+    // Live reasoning is shown while the model thinks, then auto-collapses once
+    // the answer starts streaming (user can still re-open it).
+    const [thoughtCollapsed, setThoughtCollapsed] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -77,11 +80,12 @@ export default function ChatPage() {
         }
     }, [isStreamFinished, displayThread, currentThread, displayThought, currentThought, bufferedSources]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim() || isTyping) return;
+    const handleSubmit = async (e?: React.FormEvent, override?: string) => {
+        e?.preventDefault();
+        const question = (override ?? input).trim();
+        if (!question || isTyping) return;
 
-        const userMessage: Message = { role: 'user', content: input };
+        const userMessage: Message = { role: 'user', content: question };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsTyping(true);
@@ -91,6 +95,7 @@ export default function ChatPage() {
         setDisplayThought('');
         setIsStreamFinished(false);
         setBufferedSources([]);
+        setThoughtCollapsed(false);
 
         try {
             const isAvailable = await ensureBackendAvailable(setIsWakingUp);
@@ -112,7 +117,7 @@ export default function ChatPage() {
                     'X-API-Key': apiKey
                 },
                 body: JSON.stringify({
-                    question: input,
+                    question: question,
                     history: history
                 })
             });
@@ -144,6 +149,8 @@ export default function ChatPage() {
                                 setCurrentThought(fullThought);
                             }
                             if (data.answer) {
+                                // First answer chunk → collapse the live reasoning
+                                if (fullAnswer === '') setThoughtCollapsed(true);
                                 fullAnswer += data.answer;
                                 setCurrentThread(fullAnswer);
                             }
@@ -167,7 +174,7 @@ export default function ChatPage() {
             <div className="mb-4 sm:mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl sm:text-4xl font-black tracking-tight">BREAKING <span className="text-bad-green italic">B.A.D.</span></h1>
-                    <p className="text-foreground/50 italic text-sm sm:text-base">&quot;Breaking down files. Building up answers.&quot;</p>
+                    <p className="text-foreground/70 italic text-sm sm:text-base">&quot;Breaking down files. Building up answers.&quot;</p>
                 </div>
                 <div className="hidden md:block">
                     <div className="glass-blue px-4 py-2 rounded-xl flex items-center space-x-3">
@@ -191,17 +198,23 @@ export default function ChatPage() {
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[90%] sm:max-w-[80%] ${msg.role === 'user' ? 'order-2' : ''}`}>
                             {msg.role === 'assistant' && msg.thought && (
-                                <div className="mb-3 sm:mb-4 glass-green px-2 sm:px-3 py-2 rounded-xl sm:rounded-2xl border-l-4 border-bad-green/50">
-                                    <div className="flex items-center space-x-2 mb-2">
-                                        <span className="text-[10px] font-black bg-bad-green text-bad-black px-1 rounded">Th</span>
-                                        <span className="text-[10px] sm:text-xs font-bold text-bad-green uppercase tracking-widest">Cooking the data...</span>
+                                <details className="group mb-2 sm:mb-3">
+                                    <summary className="cursor-pointer select-none list-none flex items-center gap-2 text-[10px] sm:text-xs font-bold text-bad-green/70 hover:text-bad-green uppercase tracking-widest transition-colors">
+                                        <span className="text-[10px] font-black bg-bad-green/80 text-bad-black px-1 rounded">Th</span>
+                                        <span className="group-open:hidden">Show reasoning</span>
+                                        <span className="hidden group-open:inline">Hide reasoning</span>
+                                        <svg className="w-3 h-3 transition-transform duration-300 group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </summary>
+                                    <div className="mt-2 glass-green px-2 sm:px-3 py-2 rounded-xl sm:rounded-2xl border-l-4 border-bad-green/50">
+                                        <div className="prose prose-invert max-w-none text-xs sm:text-sm text-foreground/75 italic leading-relaxed">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {msg.thought}
+                                            </ReactMarkdown>
+                                        </div>
                                     </div>
-                                    <div className="prose prose-invert max-w-none text-xs sm:text-sm text-foreground/60 italic leading-relaxed">
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                            {msg.thought}
-                                        </ReactMarkdown>
-                                    </div>
-                                </div>
+                                </details>
                             )}
 
                             <div className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl sm:rounded-3xl ${msg.role === 'user'
@@ -213,43 +226,95 @@ export default function ChatPage() {
                                         {msg.content}
                                     </ReactMarkdown>
                                 </div>
+
+                                {msg.role === 'assistant' && Array.isArray(msg.sources) && msg.sources.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap items-center gap-1.5">
+                                        <span className="text-[10px] font-bold text-bad-blue/70 uppercase tracking-widest mr-1">Sources</span>
+                                        {msg.sources.map((src, i) => (
+                                            <span key={i} className="inline-flex items-center gap-1 text-[10px] sm:text-xs bg-bad-blue/10 border border-bad-blue/20 text-bad-blue/90 px-2 py-0.5 rounded-full">
+                                                <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                </svg>
+                                                {String(src)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 ))}
+
+                {/* Empty State */}
+                {messages.length === 0 && !currentThread && !currentThought && !isWakingUp && (
+                    <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl glass-green flex items-center justify-center mb-5 text-3xl sm:text-4xl">
+                            ⚗️
+                        </div>
+                        <h2 className="text-lg sm:text-2xl font-black tracking-tight mb-2">The lab is ready</h2>
+                        <p className="text-foreground/70 text-sm sm:text-base max-w-md mb-6">
+                            Ask about the documents you&apos;ve ingested. Try one of these:
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl">
+                            {[
+                                'Summarize the key points of the documents.',
+                                'What topics are covered?',
+                                'List the main takeaways.',
+                            ].map((q) => (
+                                <button
+                                    key={q}
+                                    onClick={() => handleSubmit(undefined, q)}
+                                    className="text-xs sm:text-sm glass-blue border border-bad-blue/20 text-bad-blue/90 hover:text-bad-blue hover:border-bad-blue/50 px-3 py-2 rounded-xl transition-all active:scale-95"
+                                >
+                                    {q}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Current Streaming Response */}
                 {(currentThread || currentThought) && (
                     <div className="flex justify-start">
                         <div className="max-w-[90%] sm:max-w-[80%]">
                             {currentThought && (
-                                <div className="mb-3 sm:mb-4 glass-green px-2 sm:px-3 py-2 rounded-xl sm:rounded-2xl border-l-4 border-bad-green/50 relative overflow-hidden">
-                                    <div className="flex items-center space-x-2 mb-2 relative z-10">
+                                <details
+                                    open={!thoughtCollapsed}
+                                    onToggle={(e) => setThoughtCollapsed(!e.currentTarget.open)}
+                                    className="group mb-3 sm:mb-4"
+                                >
+                                    <summary className="cursor-pointer select-none list-none flex items-center gap-2 text-[10px] sm:text-xs font-bold text-bad-green/80 hover:text-bad-green uppercase tracking-widest transition-colors">
                                         <span className="text-[10px] font-black bg-bad-green text-bad-black px-1 rounded">Th</span>
-                                        <span className="text-[10px] sm:text-xs font-bold text-bad-green uppercase tracking-widest animate-pulse">Cooking binary meth...</span>
-                                    </div>
-                                    <div className="prose prose-invert max-w-none text-xs sm:text-sm text-foreground/60 italic leading-relaxed relative z-10">
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                            {displayThought + (displayThought.length < currentThought.length ? ' \u2588' : '')}
-                                        </ReactMarkdown>
-                                    </div>
+                                        <span className="hidden group-open:inline animate-pulse">{currentThread ? 'Reasoning' : 'Cooking binary meth...'}</span>
+                                        <span className="group-open:hidden">Show reasoning</span>
+                                        <svg className="w-3 h-3 transition-transform duration-300 group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </summary>
+                                    <div className="mt-2 glass-green px-2 sm:px-3 py-2 rounded-xl sm:rounded-2xl border-l-4 border-bad-green/50 relative overflow-hidden">
+                                        <div className="prose prose-invert max-w-none text-xs sm:text-sm text-foreground/75 italic leading-relaxed relative z-10">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {displayThought + (displayThought.length < currentThought.length ? ' \u2588' : '')}
+                                            </ReactMarkdown>
+                                        </div>
 
-                                    {/* Bubbles animation */}
-                                    {[...Array(5)].map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className="bubble"
-                                            style={{
-                                                left: `${Math.random() * 100}%`,
-                                                bottom: '-20px',
-                                                width: `${Math.random() * 10 + 5}px`,
-                                                height: `${Math.random() * 10 + 5}px`,
-                                                animationDuration: `${Math.random() * 2 + 1}s`,
-                                                animationDelay: `${Math.random() * 2}s`
-                                            }}
-                                        />
-                                    ))}
-                                </div>
+                                        {/* Bubbles animation (only while actively thinking) */}
+                                        {!currentThread && [...Array(5)].map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className="bubble"
+                                                style={{
+                                                    left: `${Math.random() * 100}%`,
+                                                    bottom: '-20px',
+                                                    width: `${Math.random() * 10 + 5}px`,
+                                                    height: `${Math.random() * 10 + 5}px`,
+                                                    animationDuration: `${Math.random() * 2 + 1}s`,
+                                                    animationDelay: `${Math.random() * 2}s`
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                </details>
                             )}
 
                             {currentThread && (
@@ -279,7 +344,7 @@ export default function ChatPage() {
                             </div>
                             <div>
                                 <p className="text-sm font-black text-bad-green uppercase tracking-widest">Waking up the chemist...</p>
-                                <p className="text-[10px] text-foreground/40 italic">Render free tier: Cold-start in progress</p>
+                                <p className="text-[10px] text-foreground/65 italic">Render free tier: Cold-start in progress</p>
                             </div>
                         </div>
                     </div>
@@ -292,12 +357,15 @@ export default function ChatPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask the chemist..."
+                    aria-label="Ask a question"
+                    autoComplete="off"
                     className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 pr-14 sm:pr-16 text-sm sm:text-base focus:outline-none focus:border-bad-blue/50 focus:ring-1 focus:ring-bad-blue/50 transition-all"
                     disabled={isTyping}
                 />
                 <button
                     type="submit"
                     disabled={!input.trim() || isTyping}
+                    aria-label={isTyping ? 'Sending message' : 'Send message'}
                     className="absolute right-2 top-2 bottom-2 bg-bad-blue hover:bg-bad-blue/90 text-bad-black font-bold px-3 sm:px-4 rounded-lg sm:rounded-xl disabled:opacity-50 transition-all active:scale-95 shadow-[0_0_15px_rgba(0,212,255,0.3)]"
                 >
                     {isTyping ? (

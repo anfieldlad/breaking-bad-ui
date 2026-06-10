@@ -33,15 +33,21 @@
 }
 
 @theme {
-  --color-bad-green: #4da163;
+  /* Breaking Bad palette — toxic lab green + meth blue + hazard yellow */
+  --color-bad-green: #6abe4f;
+  --color-bad-green-deep: #3c8a3a;
   --color-bad-blue: #00d4ff;
   --color-bad-yellow: #f1c40f;
   --color-bad-black: #060806;
 
   --background: var(--color-bad-black);
-  --foreground: #ffffff;
+  --foreground: #f3f5f3;
+  /* Readable secondary tone (use instead of low-opacity white) */
+  --color-muted: #a7b0a7;
 
-  --font-sans: "Inter", sans-serif;
+  --font-sans: var(--font-geist-sans), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-oswald), "Arial Narrow", system-ui, sans-serif;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
@@ -49,7 +55,7 @@
 
 :root {
   --background: #060806;
-  --foreground: #ffffff;
+  --foreground: #f3f5f3;
 }
 
 body {
@@ -57,6 +63,24 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings use the condensed display face for a lab-poster identity */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Hide default disclosure triangle on <summary> */
+summary::-webkit-details-marker {
+  display: none;
+}
+summary {
+  outline: none;
 }
 
 /* Glassmorphism */
@@ -68,9 +92,9 @@ body {
 }
 
 .glass-green {
-  background: rgba(77, 161, 99, 0.1);
+  background: rgba(106, 190, 79, 0.1);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(77, 161, 99, 0.2);
+  border: 1px solid rgba(106, 190, 79, 0.2);
 }
 
 .glass-blue {
@@ -109,7 +133,7 @@ body {
 }
 
 .text-glow-green {
-  text-shadow: 0 0 10px rgba(77, 161, 99, 0.5), 0 0 20px rgba(77, 161, 99, 0.3);
+  text-shadow: 0 0 10px rgba(106, 190, 79, 0.5), 0 0 20px rgba(106, 190, 79, 0.3);
 }
 
 @keyframes blink {
@@ -145,17 +169,17 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(77, 161, 99, 0.2);
+  background: rgba(106, 190, 79, 0.2);
   border-radius: 10px;
-  border: 1px solid rgba(77, 161, 99, 0.1);
+  border: 1px solid rgba(106, 190, 79, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(77, 161, 99, 0.4);
+  background: rgba(106, 190, 79, 0.4);
 }
 
 /* For Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(77, 161, 99, 0.3) var(--color-bad-black);
+  scrollbar-color: rgba(106, 190, 79, 0.3) var(--color-bad-black);
 }

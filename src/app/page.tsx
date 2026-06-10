@@ -8,7 +8,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="flex flex-col items-center text-center mb-16 sm:mb-24">
         <div className="inline-flex items-center space-x-2 glass-green px-3 sm:px-4 py-2 rounded-full mb-6 sm:mb-8 animate-pulse">
-          <span className="w-2 h-2 bg-bad-green rounded-full shadow-[0_0_8px_#4da163]" />
+          <span className="w-2 h-2 bg-bad-green rounded-full shadow-[0_0_8px_#6abe4f]" />
           <span className="text-[10px] sm:text-xs font-bold text-bad-green uppercase tracking-widest">Laboratory Status: Online</span>
         </div>
 
@@ -20,10 +20,10 @@ export default function Home() {
           </h1>
         </div>
 
-        <p className="max-w-2xl text-base sm:text-xl text-foreground/60 mb-2 px-2">
+        <p className="max-w-2xl text-base sm:text-xl text-foreground/75 mb-2 px-2">
           &quot;Breaking down files. Building up answers.&quot;
         </p>
-        <p className="max-w-2xl text-[10px] sm:text-xs text-bad-green/40 mb-8 sm:mb-12 uppercase tracking-widest font-bold px-2">
+        <p className="max-w-2xl text-[10px] sm:text-xs text-bad-green/70 mb-8 sm:mb-12 uppercase tracking-widest font-bold px-2">
           Bot Answering Dialogue • RAG Chatbot APP
         </p>
 
@@ -65,7 +65,7 @@ export default function Home() {
           </div>
           <div className="relative">
             <h2 className="text-xl sm:text-4xl font-bold mb-2 sm:mb-4 tracking-tight">Stay Out of My Territory</h2>
-            <p className="text-foreground/50 text-sm sm:text-base">Only the highest quality intelligence is allowed here.</p>
+            <p className="text-foreground/70 text-sm sm:text-base">Only the highest quality intelligence is allowed here.</p>
           </div>
         </div>
       </div>

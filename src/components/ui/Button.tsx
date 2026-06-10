@@ -15,7 +15,7 @@ export const Button = ({
     const baseStyles = 'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-95';
 
     const variants = {
-        primary: 'bg-bad-green text-bad-black hover:bg-bad-green/90 shadow-[0_0_15px_rgba(77,161,99,0.3)] focus:ring-bad-green',
+        primary: 'bg-bad-green text-bad-black hover:bg-bad-green/90 shadow-[0_0_15px_rgba(106,190,79,0.3)] focus:ring-bad-green',
         secondary: 'bg-bad-blue text-bad-black hover:bg-bad-blue/90 shadow-[0_0_15px_rgba(0,212,255,0.3)] focus:ring-bad-blue',
         outline: 'border-2 border-bad-green text-bad-green hover:bg-bad-green/10 focus:ring-bad-green',
         ghost: 'text-foreground hover:bg-white/5 focus:ring-white/20',

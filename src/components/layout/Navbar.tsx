@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Button } from '../ui/Button';
+import { BackendStatus } from './BackendStatus';
 
 export const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,9 +12,9 @@ export const Navbar = () => {
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Link href="/" className="flex items-center space-x-2">
                     <span className="text-xl md:text-2xl font-black tracking-tighter">
-                        <span className="bg-bad-green text-bad-black px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(77,161,99,0.5)]">Br</span>
+                        <span className="bg-bad-green text-bad-black px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(106,190,79,0.5)]">Br</span>
                         <span className="text-foreground ml-0.5">eaking</span>
-                        <span className="bg-bad-green text-bad-black px-1.5 py-0.5 rounded ml-1.5 shadow-[0_0_10px_rgba(77,161,99,0.5)]">B.A.D.</span>
+                        <span className="bg-bad-green text-bad-black px-1.5 py-0.5 rounded ml-1.5 shadow-[0_0_10px_rgba(106,190,79,0.5)]">B.A.D.</span>
                     </span>
                 </Link>
 
@@ -26,9 +26,7 @@ export const Navbar = () => {
                     <Link href="/chat" className="text-sm font-medium text-foreground/70 hover:text-bad-green transition-colors">
                         Laboratory
                     </Link>
-                    <Button variant="outline" size="sm">
-                        Connect
-                    </Button>
+                    <BackendStatus />
                 </div>
 
                 {/* Mobile Hamburger Button */}
@@ -63,9 +61,7 @@ export const Navbar = () => {
                         Laboratory
                     </Link>
                     <div className="pt-3 px-3">
-                        <Button variant="outline" size="sm" className="w-full">
-                            Connect
-                        </Button>
+                        <BackendStatus className="w-full justify-center" />
                     </div>
                 </div>
             </div>
