@@ -36,7 +36,7 @@ route handlers, which forward allowlisted requests to the backend and attach
 the API key on the server, so the key never appears in the client bundle.
 Never expose it through a `NEXT_PUBLIC_*` variable.
 
-> For production, point `BACKEND_URL` to your deployed backend.
+> In production these come from the Worker's config, see **Deployment** below.
 
 ### 3. Run
 
@@ -113,6 +113,39 @@ Browser ──► /api/* (Next.js route handlers, src/app/api) ──► BACKEND
 The API contract (endpoints, SSE events including `error`) is documented in
 the backend's [UI_INTEGRATION.md](https://github.com/anfieldlad/breaking-bad-backend/blob/master/UI_INTEGRATION.md).
 
+## Deployment (Cloudflare Workers)
+
+The app runs on Cloudflare Workers via the [OpenNext adapter](https://opennext.js.org/cloudflare)
+(`open-next.config.ts`, `wrangler.jsonc`). Pages are static and served from
+Workers static assets; only the `/api/*` proxy runs as code.
+
+**Configuration**
+
+| Name | Where | Notes |
+|------|-------|-------|
+| `BACKEND_URL` | `vars` in `wrangler.jsonc` | Public URL of the backend |
+| `BACKEND_API_KEY` | Worker **secret** | `npx wrangler secret put BACKEND_API_KEY` |
+
+**Deploy from your machine**
+
+```bash
+npx wrangler login
+npx wrangler secret put BACKEND_API_KEY   # once
+npm run deploy
+```
+
+**Or deploy on every push (Workers Builds)**: in the Cloudflare dashboard,
+*Workers & Pages → Create → Import a repository*, then set
+build command `npx opennextjs-cloudflare build` and deploy command
+`npx opennextjs-cloudflare deploy`. Add `BACKEND_API_KEY` as a secret under
+the Worker's *Settings → Variables and Secrets*.
+
+**Local preview in the Workers runtime**: copy `.dev.vars.example` to
+`.dev.vars`, then `npm run preview`. (`npm run dev` still uses `.env.local`.)
+
+> The backend must be reachable on a public hostname: the Worker cannot call
+> private IPs (`global_fetch_strictly_public`).
+
 ## Security
 
 - The backend API key is only read by server route handlers (`BACKEND_API_KEY`).
@@ -124,7 +157,9 @@ the backend's [UI_INTEGRATION.md](https://github.com/anfieldlad/breaking-bad-bac
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start development server |
-| `npm run build` | Build for production |
+| `npm run build` | Next.js production build |
+| `npm run preview` | Build for Cloudflare and run locally in Wrangler |
+| `npm run deploy` | Build for Cloudflare and deploy the Worker |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
 | `npm run typecheck` | Type-check with `tsc` |

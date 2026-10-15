@@ -23,7 +23,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - run: npm run build
+      - name: Build for Cloudflare Workers
+        run: npx opennextjs-cloudflare build
         env:
           NEXT_TELEMETRY_DISABLED: 1
       - name: Audit production dependencies
