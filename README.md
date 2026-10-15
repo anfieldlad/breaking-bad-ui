@@ -46,6 +46,23 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── api/                # Server-side proxy to the backend (holds the API key)
+│   ├── chat/page.tsx       # Chat page (composition only)
+│   └── ingest/page.tsx     # Ingestion page (composition only)
+├── components/
+│   ├── chat/               # MessageBubble, StreamingReply, ReasoningPanel, ...
+│   ├── ingest/             # FileDropZone, PurgePanel
+│   ├── layout/             # Navbar, BackendStatus
+│   └── ui/                 # Button, Card, Markdown, Spinner
+├── hooks/                  # useChat, useSmoothText, useDocumentCount, useAutoScroll
+└── lib/                    # api client, SSE reader, chat/file helpers (+ tests)
+```
+
 ## Pages
 
 | Route | Description |
@@ -63,7 +80,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Touch-friendly UI** — Larger tap targets and optimized spacing for mobile
 
 ### 🧪 The Lab (Ingest Page)
-- Drag-and-drop PDF upload
+- Drag-and-drop or keyboard-accessible PDF upload
+- Client-side type/size checks (max 10 MB), server errors shown verbatim
 - Real-time processing feedback
 - Document management
 - Mobile-optimized upload area
@@ -72,7 +90,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **"Cooking the data..."** — Live reasoning stream with glassmorphic UI
 - **"The pure product."** — Crystal-blue final answers
 - **Backend Warm-up** — Automatic health check handles Render free tier "cold starts" with themed notifications
-- Typewriter effect for immersive responses
+- Typewriter effect (frame-throttled) for immersive responses
+- Failed or empty answers are shown inline and excluded from model history
 - Markdown rendering with syntax highlighting
 - Responsive message bubbles optimized for mobile
 
