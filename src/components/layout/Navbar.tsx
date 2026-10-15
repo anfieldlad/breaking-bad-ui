@@ -8,7 +8,7 @@ export const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <nav className={`fixed top-0 left-0 right-0 z-50 border-b border-white/5 px-4 md:px-6 py-4 transition-all duration-300 ${isMenuOpen ? 'bg-bad-black' : 'glass'}`}>
+        <nav aria-label="Main" className={`fixed top-0 left-0 right-0 z-50 border-b border-white/5 px-4 md:px-6 py-4 transition-all duration-300 ${isMenuOpen ? 'bg-bad-black' : 'glass'}`}>
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Link href="/" className="flex items-center space-x-2">
                     <span className="text-xl md:text-2xl font-black tracking-tighter">
@@ -31,9 +31,12 @@ export const Navbar = () => {
 
                 {/* Mobile Hamburger Button */}
                 <button
+                    type="button"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg hover:bg-white/10 transition-colors"
                     aria-label="Toggle menu"
+                    aria-expanded={isMenuOpen}
+                    aria-controls="mobile-menu"
                 >
                     <span className={`block w-5 h-0.5 bg-bad-green transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
                     <span className={`block w-5 h-0.5 bg-bad-green mt-1 transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
@@ -42,7 +45,12 @@ export const Navbar = () => {
             </div>
 
             {/* Mobile Menu Dropdown */}
-            <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-60 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+            <div
+                id="mobile-menu"
+                // `inert` keeps the collapsed menu's links out of the tab order.
+                inert={!isMenuOpen}
+                className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-60 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}
+            >
                 <div className="flex flex-col space-y-1 pt-3 pb-4 border-t border-bad-green/30">
                     <Link
                         href="/ingest"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { checkHealth } from '@/lib/api';
 
 type Status = 'checking' | 'online' | 'offline';
 
@@ -18,21 +19,10 @@ export const BackendStatus = ({ className = '' }: { className?: string }) => {
 
     useEffect(() => {
         let active = true;
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
         const check = async () => {
-            try {
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 5000);
-                const res = await fetch(`${apiUrl}/health`, {
-                    signal: controller.signal,
-                    cache: 'no-store',
-                });
-                clearTimeout(id);
-                if (active) setStatus(res.ok ? 'online' : 'offline');
-            } catch {
-                if (active) setStatus('offline');
-            }
+            const online = await checkHealth(AbortSignal.timeout(5000));
+            if (active) setStatus(online ? 'online' : 'offline');
         };
 
         check();

@@ -58,7 +58,8 @@ export default function Home() {
 
       {/* Visual Element */}
       <div className="relative h-[250px] sm:h-[400px] w-full glass rounded-2xl sm:rounded-[3rem] overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+        {/* Carbon-fibre texture drawn in CSS (no third-party image request). */}
+        <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_6px),repeating-linear-gradient(-45deg,rgba(0,0,0,0.4)_0_2px,transparent_2px_6px)]" />
         <div className="z-10 text-center px-4">
           <div className="text-bad-blue text-5xl sm:text-9xl font-black opacity-10 blur-sm absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none">
             METH-AI

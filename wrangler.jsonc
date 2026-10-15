@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "breaking-bad-ui",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  // nodejs_compat: required by Next.js. global_fetch_strictly_public: the
+  // worker may only fetch public hosts (the backend must be publicly routable).
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Non-secret config. Set the API key as a secret instead:
+  //   npx wrangler secret put BACKEND_API_KEY
+  "vars": {
+    "BACKEND_URL": "https://breaking-backend.badai.app"
+  }
+}
