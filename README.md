@@ -113,6 +113,12 @@ Browser ──► /api/* (Next.js route handlers, src/app/api) ──► BACKEND
 The API contract (endpoints, SSE events including `error`) is documented in
 the backend's [UI_INTEGRATION.md](https://github.com/anfieldlad/breaking-bad-backend/blob/master/UI_INTEGRATION.md).
 
+## Security
+
+- The backend API key is only read by server route handlers (`BACKEND_API_KEY`).
+- Strict security headers (CSP, `X-Frame-Options`, `nosniff`, …) are set in `next.config.ts`; all assets are self-hosted.
+- The UI itself has no user authentication: anyone who can reach it can chat and ingest. Put it behind auth (or at least rate limiting) before exposing it publicly.
+
 ## Scripts
 
 | Command | Description |
@@ -123,6 +129,8 @@ the backend's [UI_INTEGRATION.md](https://github.com/anfieldlad/breaking-bad-bac
 | `npm run lint` | Run ESLint |
 | `npm run typecheck` | Type-check with `tsc` |
 | `npm test` | Run unit tests (Vitest) |
+
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests, build and a production dependency audit.
 
 ## License
 
