@@ -3,10 +3,20 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { ensureBackendAvailable } from '@/lib/api';
+import {
+    ApiError,
+    countDocuments,
+    ensureBackendAvailable,
+    ingestPdf,
+    purgeAllDocuments,
+} from '@/lib/api';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
+const BACKEND_ASLEEP = 'Backend failed to wake up.';
+
+/** Prefer the server's explanation; fall back to a themed generic message. */
+function errorText(err: unknown, fallback: string): string {
+    return err instanceof ApiError ? `${fallback} (${err.message})` : fallback;
+}
 
 export default function IngestPage() {
     const [file, setFile] = useState<File | null>(null);
@@ -19,49 +29,33 @@ export default function IngestPage() {
     const [purgePassword, setPurgePassword] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const refreshCount = useCallback(async () => {
-        try {
-            const res = await fetch(`${apiUrl}/api/documents/count`, {
-                headers: { 'X-API-Key': apiKey },
-                cache: 'no-store',
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setDocCount(typeof data.count === 'number' ? data.count : null);
-            }
-        } catch {
-            setDocCount(null);
-        }
-    }, []);
+    const refreshCount = useCallback(
+        () => countDocuments().then(setDocCount, () => setDocCount(null)),
+        [],
+    );
 
     useEffect(() => {
-        refreshCount();
-    }, [refreshCount]);
+        let active = true;
+        countDocuments().then(
+            (count) => active && setDocCount(count),
+            () => active && setDocCount(null),
+        );
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const handlePurge = async () => {
         setIsPurging(true);
         setMessage(null);
         try {
-            const isAvailable = await ensureBackendAvailable(setIsWakingUp);
-            if (!isAvailable) throw new Error('Backend failed to wake up.');
-
-            const res = await fetch(`${apiUrl}/api/documents?all=true`, {
-                method: 'DELETE',
-                headers: {
-                    'X-API-Key': apiKey,
-                    'X-Cleanup-Password': purgePassword,
-                },
-            });
-
-            if (res.status === 403) {
-                setMessage({ text: 'Wrong master password. The DEA stays out.', type: 'error' });
-                return;
+            if (!(await ensureBackendAvailable(setIsWakingUp))) {
+                throw new ApiError(BACKEND_ASLEEP, 503);
             }
-            if (!res.ok) throw new Error('Purge failed');
 
-            const result = await res.json();
+            const deleted = await purgeAllDocuments(purgePassword);
             setMessage({
-                text: `Evidence destroyed: ${result.deleted_count ?? 0} units wiped from the records.`,
+                text: `Evidence destroyed: ${deleted} units wiped from the records.`,
                 type: 'success',
             });
             setPurgePassword('');
@@ -69,7 +63,10 @@ export default function IngestPage() {
             await refreshCount();
         } catch (err) {
             console.error('Purge error:', err);
-            setMessage({ text: 'Could not destroy the evidence. Try again.', type: 'error' });
+            const text = err instanceof ApiError && err.status === 403
+                ? `The DEA stays out: ${err.message}`
+                : errorText(err, 'Could not destroy the evidence. Try again.');
+            setMessage({ text, type: 'error' });
         } finally {
             setIsPurging(false);
         }
@@ -87,35 +84,21 @@ export default function IngestPage() {
         setIsUploading(true);
         setMessage(null);
 
-        const formData = new FormData();
-        formData.append('file', file);
-
         try {
-            const isAvailable = await ensureBackendAvailable(setIsWakingUp);
-            if (!isAvailable) {
-                throw new Error('Backend failed to wake up.');
+            if (!(await ensureBackendAvailable(setIsWakingUp))) {
+                throw new ApiError(BACKEND_ASLEEP, 503);
             }
 
-            const response = await fetch(`${apiUrl}/api/ingest`, {
-                method: 'POST',
-                headers: {
-                    'X-API-Key': apiKey
-                },
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error('Failed to upload product');
-
-            const result = await response.json();
+            const chunksStored = await ingestPdf(file);
             setMessage({
-                text: `Batch processed: ${result.chunks_stored || 0} chemical units secured.`,
+                text: `Batch processed: ${chunksStored} chemical units secured.`,
                 type: 'success'
             });
             setFile(null);
             await refreshCount();
         } catch (err) {
             console.error("Upload error:", err);
-            setMessage({ text: 'The batch was compromised. Try again.', type: 'error' });
+            setMessage({ text: errorText(err, 'The batch was compromised. Try again.'), type: 'error' });
         } finally {
             setIsUploading(false);
         }

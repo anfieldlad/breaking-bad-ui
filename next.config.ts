@@ -1,14 +1,7 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*',
-      },
-    ];
-  },
-};
+// Backend calls go through the route handlers in src/app/api, which attach
+// the API key server-side. Configure them with BACKEND_URL / BACKEND_API_KEY.
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

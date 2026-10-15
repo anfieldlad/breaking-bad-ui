@@ -3,13 +3,39 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ensureBackendAvailable } from '@/lib/api';
+import { ApiError, ChatHistoryItem, ensureBackendAvailable, streamChat } from '@/lib/api';
 
 interface Message {
     role: 'user' | 'assistant';
     content: string;
     thought?: string;
-    sources?: unknown[];
+    sources?: string[];
+    /** Set when the answer failed; such turns are not sent back as history. */
+    error?: string;
+}
+
+const CONNECTION_LOST = 'The connection was lost. Someone must have talked to the DEA.';
+const BACKEND_ASLEEP = 'Backend failed to wake up. Someone must have called the DEA.';
+const EMPTY_ANSWER = 'The chemist came back empty-handed. Try asking again.';
+
+// Fixed bubble layout: computing random styles during render would reshuffle
+// the bubbles on every typewriter tick.
+const BUBBLES: React.CSSProperties[] = [
+    { left: '12%', width: 8, height: 8, animationDuration: '2.2s', animationDelay: '0s' },
+    { left: '31%', width: 12, height: 12, animationDuration: '1.6s', animationDelay: '0.7s' },
+    { left: '52%', width: 6, height: 6, animationDuration: '2.8s', animationDelay: '1.3s' },
+    { left: '71%', width: 14, height: 14, animationDuration: '1.9s', animationDelay: '0.4s' },
+    { left: '88%', width: 9, height: 9, animationDuration: '2.5s', animationDelay: '1.8s' },
+].map((style) => ({ ...style, bottom: '-20px' }));
+
+/** Convert the transcript into model history, skipping failed turns. */
+function toHistory(messages: Message[]): ChatHistoryItem[] {
+    return messages
+        .filter((msg, i) => !msg.error && !(msg.role === 'user' && messages[i + 1]?.error))
+        .map((msg) => ({
+            role: msg.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: msg.content }],
+        }));
 }
 
 export default function ChatPage() {
@@ -21,7 +47,7 @@ export default function ChatPage() {
     const [displayThread, setDisplayThread] = useState<string>('');
     const [displayThought, setDisplayThought] = useState<string>('');
     const [isStreamFinished, setIsStreamFinished] = useState(false);
-    const [bufferedSources, setBufferedSources] = useState<unknown[]>([]);
+    const [bufferedSources, setBufferedSources] = useState<string[]>([]);
     const [isWakingUp, setIsWakingUp] = useState(false);
     // Live reasoning is shown while the model thinks, then auto-collapses once
     // the answer starts streaming (user can still re-open it).
@@ -97,76 +123,59 @@ export default function ChatPage() {
         setBufferedSources([]);
         setThoughtCollapsed(false);
 
+        let fullAnswer = '';
+        let fullThought = '';
+        let sources: string[] = [];
+        let streamError: string | undefined;
+
         try {
-            const isAvailable = await ensureBackendAvailable(setIsWakingUp);
-            if (!isAvailable) {
-                throw new Error('Backend failed to wake up. Someone must have called the DEA.');
+            if (!(await ensureBackendAvailable(setIsWakingUp))) {
+                throw new ApiError(BACKEND_ASLEEP, 503);
             }
 
-            const history = messages.map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: msg.content }]
-            }));
-
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-            const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
-            const response = await fetch(`${apiUrl}/api/chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-Key': apiKey
-                },
-                body: JSON.stringify({
-                    question: question,
-                    history: history
-                })
-            });
-
-            if (!response.body) throw new Error('No body');
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let fullAnswer = '';
-            let fullThought = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-
-                            if (data.sources) {
-                                setBufferedSources(data.sources);
-                            }
-                            if (data.thought) {
-                                fullThought += data.thought;
-                                setCurrentThought(fullThought);
-                            }
-                            if (data.answer) {
-                                // First answer chunk → collapse the live reasoning
-                                if (fullAnswer === '') setThoughtCollapsed(true);
-                                fullAnswer += data.answer;
-                                setCurrentThread(fullAnswer);
-                            }
-                        } catch (e) {
-                            console.error("Error parsing SSE chunk", e);
-                        }
-                    }
+            const events = await streamChat(question, toHistory(messages));
+            for await (const event of events) {
+                if (event.sources) {
+                    sources = event.sources;
+                    setBufferedSources(event.sources);
                 }
+                if (event.thought) {
+                    fullThought += event.thought;
+                    setCurrentThought(fullThought);
+                }
+                if (event.answer) {
+                    // First answer chunk → collapse the live reasoning
+                    if (fullAnswer === '') setThoughtCollapsed(true);
+                    fullAnswer += event.answer;
+                    setCurrentThread(fullAnswer);
+                }
+                if (event.error) streamError = event.error;
             }
-
-            setIsStreamFinished(true);
         } catch (err) {
             console.error("Chat error:", err);
-            setMessages(prev => [...prev, { role: 'assistant', content: "The connection was lost. Someone must have talked to the DEA." }]);
-            setIsTyping(false);
+            streamError = err instanceof ApiError ? err.message : CONNECTION_LOST;
         }
+
+        if (!streamError && fullAnswer) {
+            // Let the typewriter finish; the finalizer effect commits the message.
+            setIsStreamFinished(true);
+            return;
+        }
+
+        // Failed or empty: commit immediately so the input never stays locked.
+        setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: fullAnswer,
+            thought: fullThought,
+            sources,
+            error: streamError ?? EMPTY_ANSWER,
+        }]);
+        setCurrentThread('');
+        setCurrentThought('');
+        setDisplayThread('');
+        setDisplayThought('');
+        setBufferedSources([]);
+        setIsTyping(false);
     };
 
     return (
@@ -221,13 +230,21 @@ export default function ChatPage() {
                                 ? 'bg-bad-green/10 border border-bad-green/20 text-foreground'
                                 : 'glass-blue border-l-4 border-bad-blue'
                                 }`}>
-                                <div className="prose prose-invert max-w-none leading-relaxed text-sm sm:text-base">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                        {msg.content}
-                                    </ReactMarkdown>
-                                </div>
+                                {msg.content && (
+                                    <div className="prose prose-invert max-w-none leading-relaxed text-sm sm:text-base">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {msg.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
 
-                                {msg.role === 'assistant' && Array.isArray(msg.sources) && msg.sources.length > 0 && (
+                                {msg.error && (
+                                    <p role="alert" className={`text-sm text-red-400 font-medium ${msg.content ? 'mt-2' : ''}`}>
+                                        {msg.error}
+                                    </p>
+                                )}
+
+                                {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap items-center gap-1.5">
                                         <span className="text-[10px] font-bold text-bad-blue/70 uppercase tracking-widest mr-1">Sources</span>
                                         {msg.sources.map((src, i) => (
@@ -235,7 +252,7 @@ export default function ChatPage() {
                                                 <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                 </svg>
-                                                {String(src)}
+                                                {src}
                                             </span>
                                         ))}
                                     </div>
@@ -299,19 +316,8 @@ export default function ChatPage() {
                                         </div>
 
                                         {/* Bubbles animation (only while actively thinking) */}
-                                        {!currentThread && [...Array(5)].map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="bubble"
-                                                style={{
-                                                    left: `${Math.random() * 100}%`,
-                                                    bottom: '-20px',
-                                                    width: `${Math.random() * 10 + 5}px`,
-                                                    height: `${Math.random() * 10 + 5}px`,
-                                                    animationDuration: `${Math.random() * 2 + 1}s`,
-                                                    animationDelay: `${Math.random() * 2}s`
-                                                }}
-                                            />
+                                        {!currentThread && BUBBLES.map((style, i) => (
+                                            <div key={i} className="bubble" style={style} />
                                         ))}
                                     </div>
                                 </details>

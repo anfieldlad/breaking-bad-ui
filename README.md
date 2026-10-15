@@ -24,14 +24,19 @@ npm install
 
 ### 2. Configure Environment
 
-Create a `.env.local` file:
+Create a `.env.local` file (see [.env.example](./.env.example)):
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_API_KEY=your_secret_api_key
+BACKEND_URL=http://localhost:8000
+BACKEND_API_KEY=your_secret_api_key
 ```
 
-> For production, point to your deployed backend URL.
+These are **server-side only**. The browser talks to this app's own `/api/*`
+route handlers, which forward allowlisted requests to the backend and attach
+the API key on the server, so the key never appears in the client bundle.
+Never expose it through a `NEXT_PUBLIC_*` variable.
+
+> For production, point `BACKEND_URL` to your deployed backend.
 
 ### 3. Run
 
@@ -73,31 +78,21 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Backend
 
-This UI connects to the [Breaking B.A.D. Backend](https://github.com/anfieldlad/breaking-bad-backend) — a FastAPI service with MongoDB Atlas vector storage and Google Gemini AI.
+This UI connects to the [Breaking B.A.D. Backend](https://github.com/anfieldlad/breaking-bad-backend) — a FastAPI service with MongoDB Atlas vector storage and a pluggable LLM backend (Gemini or any OpenAI-compatible endpoint).
 
 ### API Integration
 
-```javascript
-// Ingest PDF
-const formData = new FormData();
-formData.append('file', file);
-await fetch(`${API_URL}/api/ingest`, { 
-  method: 'POST', 
-  headers: { 'X-API-Key': API_KEY },
-  body: formData 
-});
-
-// Stream Chat
-const response = await fetch(`${API_URL}/api/chat`, {
-  method: 'POST',
-  headers: { 
-    'Content-Type': 'application/json',
-    'X-API-Key': API_KEY
-  },
-  body: JSON.stringify({ question: "Your question here" })
-});
-// Handle SSE stream...
 ```
+Browser ──► /api/* (Next.js route handlers, src/app/api) ──► BACKEND_URL/api/*
+                       adds X-API-Key server-side
+```
+
+- `src/lib/api.ts` — typed browser client (`streamChat`, `ingestPdf`, …).
+- `src/lib/sse.ts` — buffered SSE reader for the chat stream.
+- `src/app/api/[...path]/route.ts` — allowlisted proxy to the backend.
+
+The API contract (endpoints, SSE events including `error`) is documented in
+the backend's [UI_INTEGRATION.md](https://github.com/anfieldlad/breaking-bad-backend/blob/master/UI_INTEGRATION.md).
 
 ## Scripts
 
@@ -107,6 +102,8 @@ const response = await fetch(`${API_URL}/api/chat`, {
 | `npm run build` | Build for production |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
+| `npm run typecheck` | Type-check with `tsc` |
+| `npm test` | Run unit tests (Vitest) |
 
 ## License
 
